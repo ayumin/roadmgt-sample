@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Webアプリサンプル</title>
+<style>
+
+input.url{
+  width: 800px;
+}
+.select-group {
+  display: inline-block;
+}
+
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.js"></script>
+<script src="Sample.js"></script>
+<script>
+
+var urlList = {
+  search: "http://roadmgt.herokuapp.com/api/v1/datapoints?data_type=road-master",
+  target: "http://roadmgt.herokuapp.com/api/v1/datapoints/road-master_1",
+  props: "http://roadmgt.herokuapp.com/api/v1/datapoints/road-master_1/rm_route_name,rm_in_service_year"
+};
+var paramList = {
+  "common": [
+    "data_type",
+    "offset",
+    "limit"
+  ],
+  "road-master": [
+    "route_name",
+    "municipality",
+    "section",
+    "in_service_year",
+    "lat_start",
+    "lat_end",
+    "lon_start",
+    "lon_end"
+  ],
+  "road-surface": [
+    "municipality",
+    "section",
+    "date_start",
+    "date_end",
+    "lat_start",
+    "lat_end",
+    "lon_start",
+    "lon_end"
+  ],
+  "meas-acceleration": [
+    "car_number",
+    "date_start",
+    "date_end"
+  ],
+  "meas-angular-velocity": [
+    "car_number",
+    "date_start",
+    "date_end"
+  ],
+  "meas-locale": [
+    "date_start",
+    "date_end",
+    "lat_start",
+    "lat_end",
+    "lon_start",
+    "lon_end"
+  ]
+};
+
+$(function(){
+  var a = paramList["common"].concat(paramList["road-master"]);
+  $('#parameters').html(a.join("<br>"));
+  
+  $('select#api_type').on('change', function(){
+    $('input#url').val(urlList[$(this).val()]);
+    if($(this).val()=="search"){
+      $('#data_type_group').show();
+      $('#data_type').trigger('change');
+      $('#parameter_group').show();
+    }else{
+      $('#data_type_group').hide();
+      $('#parameter_group').hide();
+    }
+  });
+
+  $('select#data_type').on('change', function(){
+    var elm = document.createElement('a');
+    elm.href = $('#url').val();
+    var url = elm.protocol + "//" + elm.hostname + elm.pathname;
+    var keys = elm.search.replace("?", "").split("&");
+    keys = keys.map(function(e){return e.split("=")});
+    var params = keys.reduce(function(p, e){name=e[0]; val=e[1]; p[name]=val; return p}, {});
+    var s = [];
+    var f = false;
+    for(key in params){
+      if(key == "data_type"){
+        s.push(key + "=" + $(this).val());
+        f = true;
+      }else if(key != ""){
+        s.push(key + "=" + params[key]);
+      }
+    }
+    if(!f) s.push("data_type=" + $(this).val());
+    $('#url').val(url + "?" + s.join("&"));
+    //var a = paramList["common"].concat(paramList[$(this).val()]);
+    //$('#parameters').html(a.join("<br>"));
+  });
+});
+
+</script>
+</head>
+<body>
+
+<div class="container">
+  <!-- ヘッダー -->
+  <div class="header">
+    <h1>Webアプリサンプル</h1>
+  </div>
+
+  <!-- コンテンツ -->
+  <div class="contents">
+
+    <!-- メイン -->
+    <div>
+      <h2>実行</h2>
+      <form id="form_main">
+        <fieldset>
+          <div></div>
+          <div class="select-group" >
+            <label class="control-label" for="api">実行するAPI</label>
+            <div class="controls">
+              <select id="api_type">
+                <option value="search">検索</option>
+                <option value="target">ターゲット指定</option>
+                <option value="props">プロパティ指定</option>
+              </select>
+            </div>
+          </div>
+          <div class="select-group" id="data_type_group">
+            <label class="control-label" for="api">データタイプ</label>
+            <div class="controls">
+              <select id="data_type">
+                <option value="road-master">道路台帳データ</option>
+                <option value="road-surface">路面状況データ</option>
+                <option value="meas-locale">位置データ</option>
+                <option value="meas-acceleration">加速度データ</option>
+                <option value="meas-angular-velocity">角速度データ</option>
+              </select>
+            </div>
+          </div>
+          <div class="control-group" style="margin-top:10px">
+            <label class="control-label" for="url">URL</label>
+            <div class="controls">
+              <input type="text" id="url" class="url" value="http://roadmgt.herokuapp.com/api/v1/datapoints?data_type=road-master" />
+            </div>
+          </div>
+          <!--<div class="select-group" id="parameter_group" style="margin-top:20px;">
+            <label class="control-label" for="parameters">使用可能パラメータ</label>
+            <div class="controls" style="margin-top:5px; margin-left:10px;">
+              <div id="parameters"></div>
+            </div>
+          </div>-->
+          <div style="margin-top:20px;">
+            <button type="button" id="send">実行</button>
+            <button type="button" id="clear">結果のクリア</button>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+
+    <!-- 実行結果 -->
+    <div>
+      <p id="response"></p>
+    </div>
+  </div>
+
+  <!-- フッター -->
+  <div class="footer">
+  </div>
+
+</div>
+
+</body>
+</html>
